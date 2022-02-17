@@ -1,5 +1,4 @@
 import pygame
-# teste
 WIDTH = 500
 HEIGHT = 650
 
