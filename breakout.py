@@ -22,6 +22,16 @@ for i in range(28): blocks.append(["#c98100", True])
 for i in range(28): blocks.append(["#007e25", True])
 for i in range(28): blocks.append(["#c6c811", True])
 
+# rows
+for i in range(8):
+    # collumns
+    for j in range(14):
+        id = (i*14) + j
+        # block position
+        blocks[id].append(8 + (j*35)) # x position
+        blocks[id].append(133 + (i*13)) # y position
+        # height is always 8 and width is always 30
+
 # Load Player and ball
 player_surf = pygame.image.load('graphics/player.png').convert()
 player_rect = player_surf.get_rect(midbottom = (250, 620))
@@ -75,6 +85,19 @@ def ball_update():
     # Paddle collision
     if ball_rect.colliderect(player_rect):
         ball_dy = ball_velocity * (-1)
+    
+    # Collision with a block
+    if block_collision():
+        ball_dy = ball_velocity
+
+# Ball collision with the blocks
+def block_collision():
+    global blocks
+    for i in range(len(blocks)):
+        # check collision
+        if ball_rect.colliderect(pygame.Rect((blocks[i][2], blocks[i][3]), (30, 8))) and blocks[i][1]:
+            blocks[i][1] = False
+            return True
 
 # Game loop
 while True:
