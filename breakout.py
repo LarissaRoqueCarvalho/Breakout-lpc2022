@@ -30,6 +30,9 @@ player_moving_right = False
 
 ball_surf = pygame.image.load('graphics/ball.png').convert()
 ball_rect = ball_surf.get_rect(midbottom = (WIDTH/2, 580))
+ball_velocity = 3
+ball_dx = ball_velocity
+ball_dy = ball_velocity * (-1)
 
 # Load score
 score_surf = game_font.render('000', False, 'White')
@@ -45,10 +48,33 @@ def player_update():
     if player_moving_left:
         player_rect.x -= 7
     
+    # Walls collision
     if player_rect.left <= 0:
         player_rect.left = 0
     if player_rect.right >= WIDTH:
         player_rect.right = WIDTH
+
+# Ball movement
+def ball_update():
+    global ball_dx
+    global ball_dy
+
+    ball_rect.x += ball_dx
+    ball_rect.y += ball_dy
+
+    # Walls collision
+    if ball_rect.top <= 20:
+        ball_dy = ball_velocity
+    if ball_rect.bottom >= HEIGHT:
+        ball_dy = ball_velocity * (-1)
+    if ball_rect.left <= 0:
+        ball_dx = ball_velocity
+    if ball_rect.right >= WIDTH:
+        ball_dx = ball_velocity * (-1)
+    
+    # Paddle collision
+    if ball_rect.colliderect(player_rect):
+        ball_dy = ball_velocity * (-1)
 
 # Game loop
 while True:
@@ -94,6 +120,7 @@ while True:
     screen.blit(ball_surf, ball_rect)
 
     player_update()
+    ball_update()
     
     pygame.display.update()
 
