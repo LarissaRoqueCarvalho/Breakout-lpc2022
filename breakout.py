@@ -5,7 +5,7 @@ import time
 WIDTH = 500
 HEIGHT = 650
 
-game_active = False
+game_active = True
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -35,7 +35,7 @@ for i in range(8):
         # height is always 8 and width is always 30
 
 # Load Player and ball
-player_surf = pygame.image.load('graphics/initial.png').convert()
+player_surf = pygame.image.load('graphics/player.png').convert()
 player_rect = player_surf.get_rect(midbottom=(250, 620))
 player_moving_left = False
 player_moving_right = False
@@ -54,23 +54,24 @@ round_surf_1 = game_font.render('1', False, 'White')
 round_surf_2 = game_font.render('1', False, 'White')
 
 score = 0
-round = 1
+round = 0
 
 # Background Image
 back_img = pygame.image.load('graphics/background.png').convert()
 
 # Player movement
 def player_update():
-    if player_moving_right:
-        player_rect.x += 7
-    if player_moving_left:
-        player_rect.x -= 7
+    if game_active:
+        if player_moving_right:
+            player_rect.x += 7
+        if player_moving_left:
+            player_rect.x -= 7
 
-    # Walls collision
-    if player_rect.left <= 0:
-        player_rect.left = 0
-    if player_rect.right >= WIDTH:
-        player_rect.right = WIDTH
+        # Walls collision
+        if player_rect.left <= 0:
+            player_rect.left = 0
+        if player_rect.right >= WIDTH:
+            player_rect.right = WIDTH
 
 # Ball movement
 def ball_update():
@@ -88,12 +89,12 @@ def ball_update():
         ball_rect.midbottom = (WIDTH / 2, 350)
         ball_dy = ball_velocity * (-1)
         round += 1
-        set_round(round)
-        game_active = False
+        if game_active:
+            set_round(round)
         pygame.mixer.music.load('sounds/sound_2.mp3')
         pygame.mixer.music.play(0)
-        time.sleep(3)
-        game_active = True
+        if round > 1:
+            time.sleep(3)
     if ball_rect.left <= 0:
         ball_dx = ball_velocity
         pygame.mixer.music.load('sounds/sound_1.mp3')
@@ -118,22 +119,25 @@ def block_collision():
     global blocks, ball_dx, ball_dy, ball_velocity, score
     for block in blocks:
         # check collision
-        if ball_rect.colliderect(block[2]) and block[1] and game_active:
-            block[1] = False
+        if ball_rect.colliderect(block[2]) and block[1]:
+            
             pygame.mixer.music.load('sounds/sound_1.mp3')
             pygame.mixer.music.play(0)
 
-            # New score
-            if block[0] == '#a60601':
-                score += 7
-            elif block[0] =='#c98100':
-                score += 5
-            elif block[0] =='#007e25':
-                score += 3
-            elif block[0] =='#c6c811':
-                score += 1
-            
-            set_score(score)
+            if game_active:
+                block[1] = False
+
+                # New score
+                if block[0] == '#a60601':
+                    score += 7
+                elif block[0] =='#c98100':
+                    score += 5
+                elif block[0] =='#007e25':
+                    score += 3
+                elif block[0] =='#c6c811':
+                    score += 1
+                
+                set_score(score)
 
             if ball_rect.right - ball_velocity < block[2].left:
                 ball_dx = ball_velocity * (-1)
@@ -155,78 +159,62 @@ def set_score(new_score):
         score_surf_1 = game_font.render(f'{new_score}', False, 'White')
 
 def set_round(new_round):
-    global round_surf_2
+    global round_surf_2, player_surf, player_rect, game_active
     round_surf_2 = game_font.render(f'{new_round}', False, 'White')
+
+    if new_round == 4:
+        player_surf = pygame.image.load('graphics/initial.png').convert()
+        player_rect = player_surf.get_rect(midbottom=(250, 620))
+        game_active = False
 
 # Game loop
 while True:
-    if game_active:
-        # Check player input
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                # desinitialize pygame
-                pygame.quit()
-                # close de program
-                exit()
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    player_surf = pygame.image.load('graphics/player.png').convert()
-                    player_rect = player_surf.get_rect(midbottom=(250, 620))
-                    ball_rect = ball_surf.get_rect(midbottom=(WIDTH / 2, 350))
+    # Check player input
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            # desinitialize pygame
+            pygame.quit()
+            # close de program
+            exit()
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RIGHT:
+                player_moving_right = True
+            if event.key == pygame.K_LEFT:
+                player_moving_left = True
+        if event.type == pygame.KEYUP:
+            if event.key == pygame.K_RIGHT:
+                player_moving_right = False
+            if event.key == pygame.K_LEFT:
+                player_moving_left = False
 
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RIGHT:
-                    player_moving_right = True
-                if event.key == pygame.K_LEFT:
-                    player_moving_left = True
-            if event.type == pygame.KEYUP:
-                if event.key == pygame.K_RIGHT:
-                    player_moving_right = False
-                if event.key == pygame.K_LEFT:
-                    player_moving_left = False
+    # Load background
+    screen.blit(back_img, (0, 0))
 
-        # Load background
-        screen.blit(back_img, (0, 0))
+    # rows
+    for i in range(8):
+        # collumns
+        for j in range(14):
+            block = blocks[(i * 14) + j]
+            # if the block isn't broken
+            if block[1]:
+                pygame.draw.rect(screen, block[0], block[2])
 
-        # rows
-        for i in range(8):
-            # collumns
-            for j in range(14):
-                block = blocks[(i * 14) + j]
-                # if the block isn't broken
-                if block[1]:
-                    pygame.draw.rect(screen, block[0], block[2])
+    # Player and ball
+    screen.blit(player_surf, player_rect)
+    screen.blit(ball_surf, ball_rect)
 
-        # Player and ball
-        screen.blit(player_surf, player_rect)
-        screen.blit(ball_surf, ball_rect)
+    player_update()
+    ball_update()
 
-        player_update()
-        ball_update()
+    # Score
+    screen.blit(round_surf_1, (40, 25))
+    screen.blit(round_surf_2, (320, 25))
 
-        # Score
-        screen.blit(round_surf_1, (40, 25))
-        screen.blit(round_surf_2, (320, 25))
+    screen.blit(score_surf_1, (45, 85))
+    screen.blit(score_surf_2, (325, 85))
 
-        screen.blit(score_surf_1, (45, 85))
-        screen.blit(score_surf_2, (325, 85))
+    pygame.display.update()
 
-        pygame.display.update()
-
-        # makes sure that the loop won't run faster than
-        # 60 frames per second
-        clock.tick(60)
-    else:
-        # Init game
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                # desinitialize pygame
-                pygame.quit()
-                # close de program
-                exit()
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    game_active = True
-                    player_surf = pygame.image.load('graphics/player.png').convert()
-                    player_rect = player_surf.get_rect(midbottom=(250, 620))
-                    ball_rect = ball_surf.get_rect(midbottom=(WIDTH / 2, 350))
+    # makes sure that the loop won't run faster than
+    # 60 frames per second
+    clock.tick(60)
