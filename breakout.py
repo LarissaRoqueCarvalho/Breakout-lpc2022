@@ -23,10 +23,14 @@ game_font = pygame.font.Font('font/Pixeltype.ttf', 80)
 # Load Blocks
 blocks = []
 
-for i in range(28): blocks.append(["#a60601", True])
-for i in range(28): blocks.append(["#c98100", True])
-for i in range(28): blocks.append(["#007e25", True])
-for i in range(28): blocks.append(["#c6c811", True])
+for i in range(28):
+    blocks.append(["#a60601", True])
+for i in range(28):
+    blocks.append(["#c98100", True])
+for i in range(28):
+    blocks.append(["#007e25", True])
+for i in range(28):
+    blocks.append(["#c6c811", True])
 
 # rows
 for i in range(8):
@@ -34,7 +38,7 @@ for i in range(8):
     for j in range(14):
         id = (i * 14) + j
         # block position
-        blocks[id].append(pygame.Rect((8 + (j*35)), (133 + (i*13)), 30, 8))
+        blocks[id].append(pygame.Rect((8 + (j * 35)), (133 + (i * 13)), 30, 8))
         # height is always 8 and width is always 30
 
 # Load Player and ball
@@ -62,6 +66,7 @@ round = 0
 # Background Image
 back_img = pygame.image.load('graphics/background.png').convert()
 
+
 # Player movement
 def player_update():
     if game_active:
@@ -76,6 +81,7 @@ def player_update():
         if player_rect.right >= WIDTH:
             player_rect.right = WIDTH
 
+
 # Ball movement
 def ball_update():
     global ball_dx, ball_dy, game_active, round, hits, ball_velocity
@@ -88,7 +94,7 @@ def ball_update():
         ball_dy = ball_velocity
         pygame.mixer.music.load('sounds/sound_1.mp3')
         pygame.mixer.music.play(0)
-    if ball_rect.bottom >= HEIGHT: # lost the round
+    if ball_rect.bottom >= HEIGHT:  # lost the round
         ball_rect.midbottom = (WIDTH / 2, 350)
         ball_dy = ball_velocity * (-1)
         round += 1
@@ -114,7 +120,7 @@ def ball_update():
         ball_dy = ball_velocity * (-1)
         pygame.mixer.music.load('sounds/sound_1.mp3')
         pygame.mixer.music.play(0)
-    
+
     if block_collision():
         if ball_dy > 0:
             ball_dy = ball_velocity * (-1)
@@ -128,7 +134,7 @@ def block_collision():
     for block in blocks:
         # check collision
         if ball_rect.colliderect(block[2]) and block[1]:
-            
+
             pygame.mixer.music.load('sounds/sound_1.mp3')
             pygame.mixer.music.play(0)
 
@@ -145,23 +151,25 @@ def block_collision():
                 if block[0] == '#a60601':
                     score += 7
                     set_velocity(4)
-                elif block[0] =='#c98100':
+                elif block[0] == '#c98100':
                     score += 5
                     set_velocity(3)
-                elif block[0] =='#007e25':
+                elif block[0] == '#007e25':
                     score += 3
-                elif block[0] =='#c6c811':
+                elif block[0] == '#c6c811':
                     score += 1
-                
+
                 set_score(score)
 
             if ball_rect.right - ball_velocity < block[2].left:
                 ball_dx = ball_velocity * (-1)
             elif ball_rect.left + ball_velocity > block[2].right:
                 ball_dx = ball_velocity
-            
-            if ball_rect.top + ball_velocity > block[2].bottom or ball_rect.bottom - ball_velocity < block[2].top:
+
+            if ball_rect.top + ball_velocity > block[2].bottom or\
+                    ball_rect.bottom - ball_velocity < block[2].top:
                 return True
+
 
 # set score_surf text
 def set_score(new_score):
@@ -173,11 +181,12 @@ def set_score(new_score):
         score_surf_1 = game_font.render(f'0{new_score}', False, 'White')
     else:
         score_surf_1 = game_font.render(f'{new_score}', False, 'White')
-    
+
     if new_score == 896:
         player_surf = pygame.image.load('graphics/initial.png').convert()
         player_rect = player_surf.get_rect(midbottom=(250, 620))
         game_active = False
+
 
 def set_round(new_round):
     global round_surf_2, player_surf, player_rect, game_active
@@ -187,6 +196,7 @@ def set_round(new_round):
         player_surf = pygame.image.load('graphics/initial.png').convert()
         player_rect = player_surf.get_rect(midbottom=(250, 620))
         game_active = False
+
 
 def set_velocity(situation):
     global ball_velocity
@@ -199,6 +209,7 @@ def set_velocity(situation):
         ball_velocity = 3 * 1.7
     else:
         ball_velocity = 3 * 2
+
 
 # Game loop
 while True:
