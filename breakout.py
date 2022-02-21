@@ -165,7 +165,7 @@ def block_collision():
 
 # set score_surf text
 def set_score(new_score):
-    global score_surf_1
+    global score_surf_1, game_active, player_surf, player_rect
 
     if new_score < 10:
         score_surf_1 = game_font.render(f'00{new_score}', False, 'White')
@@ -173,6 +173,11 @@ def set_score(new_score):
         score_surf_1 = game_font.render(f'0{new_score}', False, 'White')
     else:
         score_surf_1 = game_font.render(f'{new_score}', False, 'White')
+    
+    if new_score == 896:
+        player_surf = pygame.image.load('graphics/initial.png').convert()
+        player_rect = player_surf.get_rect(midbottom=(250, 620))
+        game_active = False
 
 def set_round(new_round):
     global round_surf_2, player_surf, player_rect, game_active
