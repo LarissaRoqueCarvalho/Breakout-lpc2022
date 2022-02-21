@@ -1,11 +1,11 @@
 from turtle import width
 import pygame
+import time
 
 WIDTH = 500
 HEIGHT = 650
 
-score = 0
-turn = 1
+game_active = False
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -49,7 +49,12 @@ ball_dy = ball_velocity * (-1)
 # Load score
 score_surf_1 = game_font.render('000', False, 'White')
 score_surf_2 = game_font.render('000', False, 'White')
-round_surf = game_font.render('1', False, 'White')
+
+round_surf_1 = game_font.render('1', False, 'White')
+round_surf_2 = game_font.render('1', False, 'White')
+
+score = 0
+round = 1
 
 # Background Image
 back_img = pygame.image.load('graphics/background.png').convert()
@@ -69,8 +74,7 @@ def player_update():
 
 # Ball movement
 def ball_update():
-    global ball_dx
-    global ball_dy
+    global ball_dx, ball_dy, game_active, round
 
     ball_rect.x += ball_dx
     ball_rect.y += ball_dy
@@ -80,10 +84,16 @@ def ball_update():
         ball_dy = ball_velocity
         pygame.mixer.music.load('sounds/sound_1.mp3')
         pygame.mixer.music.play(0)
-    if ball_rect.bottom >= HEIGHT:
+    if ball_rect.bottom >= HEIGHT: # lost the round
+        ball_rect.midbottom = (WIDTH / 2, 350)
         ball_dy = ball_velocity * (-1)
+        round += 1
+        set_round(round)
+        game_active = False
         pygame.mixer.music.load('sounds/sound_2.mp3')
         pygame.mixer.music.play(0)
+        time.sleep(3)
+        game_active = True
     if ball_rect.left <= 0:
         ball_dx = ball_velocity
         pygame.mixer.music.load('sounds/sound_1.mp3')
@@ -108,7 +118,7 @@ def block_collision():
     global blocks, ball_dx, ball_dy, ball_velocity, score
     for block in blocks:
         # check collision
-        if ball_rect.colliderect(block[2]) and block[1]:
+        if ball_rect.colliderect(block[2]) and block[1] and game_active:
             block[1] = False
             pygame.mixer.music.load('sounds/sound_1.mp3')
             pygame.mixer.music.play(0)
@@ -144,60 +154,79 @@ def set_score(new_score):
     else:
         score_surf_1 = game_font.render(f'{new_score}', False, 'White')
 
+def set_round(new_round):
+    global round_surf_2
+    round_surf_2 = game_font.render(f'{new_round}', False, 'White')
+
 # Game loop
 while True:
-    # Check player input
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            # desinitialize pygame
-            pygame.quit()
-            # close de program
-            exit()
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                player_surf = pygame.image.load('graphics/player.png').convert()
-                player_rect = player_surf.get_rect(midbottom=(250, 620))
-                ball_rect = ball_surf.get_rect(midbottom=(WIDTH / 2, 350))
+    if game_active:
+        # Check player input
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                # desinitialize pygame
+                pygame.quit()
+                # close de program
+                exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    player_surf = pygame.image.load('graphics/player.png').convert()
+                    player_rect = player_surf.get_rect(midbottom=(250, 620))
+                    ball_rect = ball_surf.get_rect(midbottom=(WIDTH / 2, 350))
 
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_RIGHT:
-                player_moving_right = True
-            if event.key == pygame.K_LEFT:
-                player_moving_left = True
-        if event.type == pygame.KEYUP:
-            if event.key == pygame.K_RIGHT:
-                player_moving_right = False
-            if event.key == pygame.K_LEFT:
-                player_moving_left = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RIGHT:
+                    player_moving_right = True
+                if event.key == pygame.K_LEFT:
+                    player_moving_left = True
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_RIGHT:
+                    player_moving_right = False
+                if event.key == pygame.K_LEFT:
+                    player_moving_left = False
 
-    # Load background
-    screen.blit(back_img, (0, 0))
+        # Load background
+        screen.blit(back_img, (0, 0))
 
-    # rows
-    for i in range(8):
-        # collumns
-        for j in range(14):
-            block = blocks[(i * 14) + j]
-            # if the block isn't broken
-            if block[1]:
-                pygame.draw.rect(screen, block[0], block[2])
+        # rows
+        for i in range(8):
+            # collumns
+            for j in range(14):
+                block = blocks[(i * 14) + j]
+                # if the block isn't broken
+                if block[1]:
+                    pygame.draw.rect(screen, block[0], block[2])
 
-    # Score
-    screen.blit(round_surf, (40, 25))
-    screen.blit(round_surf, (320, 25))
+        # Player and ball
+        screen.blit(player_surf, player_rect)
+        screen.blit(ball_surf, ball_rect)
 
-    screen.blit(score_surf_1, (45, 85))
-    screen.blit(score_surf_2, (325, 85))
+        player_update()
+        ball_update()
 
-    # Player and ball
-    screen.blit(player_surf, player_rect)
-    screen.blit(ball_surf, ball_rect)
+        # Score
+        screen.blit(round_surf_1, (40, 25))
+        screen.blit(round_surf_2, (320, 25))
 
-    player_update()
-    ball_update()
+        screen.blit(score_surf_1, (45, 85))
+        screen.blit(score_surf_2, (325, 85))
 
-    pygame.display.update()
+        pygame.display.update()
 
-    # makes sure that the loop won't run faster than
-    # 60 frames per second
-    clock.tick(60)
+        # makes sure that the loop won't run faster than
+        # 60 frames per second
+        clock.tick(60)
+    else:
+        # Init game
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                # desinitialize pygame
+                pygame.quit()
+                # close de program
+                exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    game_active = True
+                    player_surf = pygame.image.load('graphics/player.png').convert()
+                    player_rect = player_surf.get_rect(midbottom=(250, 620))
+                    ball_rect = ball_surf.get_rect(midbottom=(WIDTH / 2, 350))
