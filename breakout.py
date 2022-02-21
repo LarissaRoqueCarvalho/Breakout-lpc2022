@@ -6,6 +6,9 @@ WIDTH = 500
 HEIGHT = 650
 
 game_active = True
+hits = 0
+orange_row_contact = True
+red_row_contact = True
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -75,7 +78,7 @@ def player_update():
 
 # Ball movement
 def ball_update():
-    global ball_dx, ball_dy, game_active, round
+    global ball_dx, ball_dy, game_active, round, hits, ball_velocity
 
     ball_rect.x += ball_dx
     ball_rect.y += ball_dy
@@ -95,6 +98,8 @@ def ball_update():
         pygame.mixer.music.play(0)
         if round > 1:
             time.sleep(3)
+            hits = 0
+            ball_velocity = 3
     if ball_rect.left <= 0:
         ball_dx = ball_velocity
         pygame.mixer.music.load('sounds/sound_1.mp3')
@@ -111,12 +116,15 @@ def ball_update():
         pygame.mixer.music.play(0)
     
     if block_collision():
-        ball_dy *= -1
+        if ball_dy > 0:
+            ball_dy = ball_velocity * (-1)
+        else:
+            ball_dy = ball_velocity
 
 
 # Ball collision with the blocks
 def block_collision():
-    global blocks, ball_dx, ball_dy, ball_velocity, score
+    global blocks, ball_dx, ball_dy, ball_velocity, score, hits
     for block in blocks:
         # check collision
         if ball_rect.colliderect(block[2]) and block[1]:
@@ -126,12 +134,20 @@ def block_collision():
 
             if game_active:
                 block[1] = False
+                hits += 1
+
+                if hits == 4:
+                    set_velocity(0)
+                elif hits == 12:
+                    set_velocity(1)
 
                 # New score
                 if block[0] == '#a60601':
                     score += 7
+                    set_velocity(4)
                 elif block[0] =='#c98100':
                     score += 5
+                    set_velocity(3)
                 elif block[0] =='#007e25':
                     score += 3
                 elif block[0] =='#c6c811':
@@ -166,6 +182,18 @@ def set_round(new_round):
         player_surf = pygame.image.load('graphics/initial.png').convert()
         player_rect = player_surf.get_rect(midbottom=(250, 620))
         game_active = False
+
+def set_velocity(situation):
+    global ball_velocity
+
+    if situation == 0:
+        ball_velocity = 3 * 1.3
+    elif situation == 2:
+        ball_velocity = 3 * 1.5
+    elif situation == 3:
+        ball_velocity = 3 * 1.7
+    else:
+        ball_velocity = 3 * 2
 
 # Game loop
 while True:
