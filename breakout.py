@@ -28,8 +28,7 @@ for i in range(8):
     for j in range(14):
         id = (i * 14) + j
         # block position
-        blocks[id].append(8 + (j * 35))  # x position
-        blocks[id].append(133 + (i * 13))  # y position
+        blocks[id].append(pygame.Rect((8 + (j*35)), (133 + (i*13)), 30, 8))
         # height is always 8 and width is always 30
 
 # Load Player and ball
@@ -95,22 +94,27 @@ def ball_update():
         ball_dy = ball_velocity * (-1)
         pygame.mixer.music.load('sounds/sound_1.mp3')
         pygame.mixer.music.play(0)
-
-    # Collision with a block
+    
     if block_collision():
-        ball_dy = ball_velocity
+        ball_dy *= -1
+
 
 # Ball collision with the blocks
 def block_collision():
-    global blocks
-    for i in range(len(blocks)):
+    global blocks, ball_dx, ball_dy, ball_velocity
+    for block in blocks:
         # check collision
-        if ball_rect.colliderect(pygame.Rect((blocks[i][2], blocks[i][3]), (30, 8))) and blocks[i][1]:
-            blocks[i][1] = False
-            if blocks[i][1] == False:
-                pygame.mixer.music.load('sounds/sound_1.mp3')
-                pygame.mixer.music.play(0)
-            return True
+        if ball_rect.colliderect(block[2]) and block[1]:
+            block[1] = False
+            pygame.mixer.music.load('sounds/sound_1.mp3')
+            pygame.mixer.music.play(0)
+
+            if ball_rect.right - ball_velocity < block[2].left or ball_rect.left + ball_velocity > block[2].right:
+                ball_dx *= -1
+                if ball_rect.top + ball_velocity > block[2].bottom or ball_rect.bottom - ball_velocity < block[2].top:
+                    return True
+            else:
+                return True 
 
 # Game loop
 while True:
@@ -148,7 +152,7 @@ while True:
             block = blocks[(i * 14) + j]
             # if the block isn't broken
             if block[1]:
-                pygame.draw.line(screen, block[0], (8 + (j * 35), 133 + (i * 13)), (38 + (j * 35), 133 + (i * 13)), 8)
+                pygame.draw.rect(screen, block[0], block[2])
 
     # Score
     screen.blit(round_surf, (40, 25))
