@@ -4,6 +4,9 @@ import pygame
 WIDTH = 500
 HEIGHT = 650
 
+score = 0
+turn = 1
+
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption('Breakout - LPC2022')
@@ -44,7 +47,8 @@ ball_dx = ball_velocity
 ball_dy = ball_velocity * (-1)
 
 # Load score
-score_surf = game_font.render('000', False, 'White')
+score_surf_1 = game_font.render('000', False, 'White')
+score_surf_2 = game_font.render('000', False, 'White')
 round_surf = game_font.render('1', False, 'White')
 
 # Background Image
@@ -101,7 +105,7 @@ def ball_update():
 
 # Ball collision with the blocks
 def block_collision():
-    global blocks, ball_dx, ball_dy, ball_velocity
+    global blocks, ball_dx, ball_dy, ball_velocity, score
     for block in blocks:
         # check collision
         if ball_rect.colliderect(block[2]) and block[1]:
@@ -109,12 +113,36 @@ def block_collision():
             pygame.mixer.music.load('sounds/sound_1.mp3')
             pygame.mixer.music.play(0)
 
-            if ball_rect.right - ball_velocity < block[2].left or ball_rect.left + ball_velocity > block[2].right:
-                ball_dx *= -1
-                if ball_rect.top + ball_velocity > block[2].bottom or ball_rect.bottom - ball_velocity < block[2].top:
-                    return True
-            else:
-                return True 
+            # New score
+            if block[0] == '#a60601':
+                score += 7
+            elif block[0] =='#c98100':
+                score += 5
+            elif block[0] =='#007e25':
+                score += 3
+            elif block[0] =='#c6c811':
+                score += 1
+            
+            set_score(score)
+
+            if ball_rect.right - ball_velocity < block[2].left:
+                ball_dx = ball_velocity * (-1)
+            elif ball_rect.left + ball_velocity > block[2].right:
+                ball_dx = ball_velocity
+            
+            if ball_rect.top + ball_velocity > block[2].bottom or ball_rect.bottom - ball_velocity < block[2].top:
+                return True
+
+# set score_surf text
+def set_score(new_score):
+    global score_surf_1
+
+    if new_score < 10:
+        score_surf_1 = game_font.render(f'00{new_score}', False, 'White')
+    elif new_score < 100:
+        score_surf_1 = game_font.render(f'0{new_score}', False, 'White')
+    else:
+        score_surf_1 = game_font.render(f'{new_score}', False, 'White')
 
 # Game loop
 while True:
@@ -158,8 +186,8 @@ while True:
     screen.blit(round_surf, (40, 25))
     screen.blit(round_surf, (320, 25))
 
-    screen.blit(score_surf, (45, 85))
-    screen.blit(score_surf, (325, 85))
+    screen.blit(score_surf_1, (45, 85))
+    screen.blit(score_surf_2, (325, 85))
 
     # Player and ball
     screen.blit(player_surf, player_rect)
